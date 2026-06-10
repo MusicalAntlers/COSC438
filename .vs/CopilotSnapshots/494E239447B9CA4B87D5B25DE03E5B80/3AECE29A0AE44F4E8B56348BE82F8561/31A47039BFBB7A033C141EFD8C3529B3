@@ -1,0 +1,247 @@
+﻿// This is a copy of cosc438_project_virtpet.cpp with inline recommendations as comments only.
+// No code in this file is changed; only comments (//) were added to explain where to place
+// functions, classes, and where a game loop could live. Keep the original file unchanged.
+
+#include "framework.h"
+#include "cosc438_project_virtpet.h"
+
+#define MAX_LOADSTRING 100
+
+// Global Variables:
+HINSTANCE hInst;                                // current instance
+WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
+WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+
+// Forward declarations of functions included in this code module:
+ATOM                MyRegisterClass(HINSTANCE hInstance);
+BOOL                InitInstance(HINSTANCE, int);
+LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
+					 _In_opt_ HINSTANCE hPrevInstance,
+					 _In_ LPWSTR    lpCmdLine,
+					 _In_ int       nCmdShow)
+{
+	UNREFERENCED_PARAMETER(hPrevInstance);
+	UNREFERENCED_PARAMETER(lpCmdLine);
+
+	// TODO: Place code here.
+	// Recommendation (commented):
+	// - The "TODO: Place code here." area is appropriate for very small, quick setup only
+	//   (for example: setting up logging, configuring global options, or creating a single
+	//   Game instance). For larger game logic, create separate header/source files and
+	//   keep the entry-point file focused on app initialization and the message / game loop.
+	//
+	// - Preferred structure:
+	//   * Game.h / Game.cpp  -> contains class Game { void Init(HWND); void Update(float dt); void Render(); void Shutdown(); }
+	//   * Pet.h / Pet.cpp    -> contains your virtual pet class implementation and state
+	//   * Renderer.h / Renderer.cpp -> encapsulate drawing code (GDI/Direct2D/OpenGL/DirectX)
+	//
+	// - Advantages of separate files: easier organization, faster compile for small edits,
+	//   clearer responsibilities, unit testing friendly.
+	//
+	// Example comment-only prototypes (place these in new .h files, not here):
+	// // class Game { public: bool Initialize(HINSTANCE hInst, HWND hwnd); void Update(float dt); void Render(); void Shutdown(); };
+	// // class Pet { public: void UpdateBehavior(float dt); void Draw(HDC hdc); /* state, stats, actions */ };
+	//
+	// - Use the TODO area to create a Game instance and perform early initialization like:
+	// // Game* g_game = new Game();
+	// // g_game->Initialize(hInstance, mainWindowHandle); // but typically you get HWND after CreateWindow
+	//
+	// NOTE: Do not put large class definitions here. Put only construction/initialization calls.
+
+	// Initialize global strings
+	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+	LoadStringW(hInstance, IDC_COSC438PROJECTVIRTPET, szWindowClass, MAX_LOADSTRING);
+	MyRegisterClass(hInstance);
+
+	// Perform application initialization:
+	if (!InitInstance (hInstance, nCmdShow))
+	{
+		return FALSE;
+	}
+
+	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_COSC438PROJECTVIRTPET));
+
+	MSG msg;
+
+	// Main message loop:
+	// Current template uses GetMessage which blocks until a message arrives. This is fine for
+	// traditional GUI apps, but for games you typically need a continuous update/render loop.
+	// If you want a real-time game loop, replace the GetMessage loop with a PeekMessage-based
+	// loop so you can update and render at a fixed or variable timestep.
+	//
+	// Commented example of a typical game loop (do NOT uncomment here; move to your main file):
+	// // const double targetSecondsPerFrame = 1.0 / 60.0;
+	// // LARGE_INTEGER freq, prev, now;
+	// // QueryPerformanceFrequency(&freq);
+	// // QueryPerformanceCounter(&prev);
+	// // bool running = true;
+	// // while (running) {
+	// //     while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+	// //         if (msg.message == WM_QUIT) { running = false; break; }
+	// //         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) {
+	// //             TranslateMessage(&msg);
+	// //             DispatchMessage(&msg);
+	// //         }
+	// //     }
+	// //     QueryPerformanceCounter(&now);
+	// //     double dt = (double)(now.QuadPart - prev.QuadPart) / (double)freq.QuadPart;
+	// //     prev = now;
+	// //     // Update game logic with dt
+	// //     // g_game->Update((float)dt);
+	// //     // Render: either call InvalidateRect(hwnd, NULL, FALSE) and handle WM_PAINT, or call Renderer directly
+	// //     // g_game->Render();
+	// //     // Optionally Sleep or use high precision timer to cap frame rate
+	// // }
+	//
+	// Alternatives:
+	// - Use a WM_TIMER or multimedia timer for a tick-based update, dispatching InvalidateRect to trigger WM_PAINT.
+	// - Use a separate worker thread for game update/rendering (more advanced; be careful with UI thread calls).
+
+	while (GetMessage(&msg, nullptr, 0, 0))
+	{
+		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
+
+	return (int) msg.wParam;
+}
+
+
+
+//
+//  FUNCTION: MyRegisterClass()
+//
+//  PURPOSE: Registers the window class.
+//
+//
+ATOM MyRegisterClass(HINSTANCE hInstance)
+{
+	WNDCLASSEXW wcex;
+
+	wcex.cbSize = sizeof(WNDCLASSEX);
+
+	wcex.style          = CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc    = WndProc;
+	wcex.cbClsExtra     = 0;
+	wcex.cbWndExtra     = 0;
+	wcex.hInstance      = hInstance;
+	wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_COSC438PROJECTVIRTPET));
+	wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
+	wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+	wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_COSC438PROJECTVIRTPET);
+	wcex.lpszClassName  = szWindowClass;
+	wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+
+	return RegisterClassExW(&wcex);
+}
+
+//
+//   FUNCTION: InitInstance(HINSTANCE, int)
+//
+//   PURPOSE: Saves instance handle and creates main window
+//
+//   COMMENTS:
+//
+//        In this function, we save the instance handle in a global variable and
+//        create and display the main program window.
+//
+BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
+{
+   hInst = hInstance; // Store instance handle in our global variable
+
+   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+	  CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+
+   if (!hWnd)
+   {
+	  return FALSE;
+   }
+
+   ShowWindow(hWnd, nCmdShow);
+   UpdateWindow(hWnd);
+
+   return TRUE;
+}
+
+//
+//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
+//
+//  PURPOSE: Processes messages for the main window.
+//
+//  WM_COMMAND  - process the application menu
+//  WM_PAINT    - Paint the main window
+//  WM_DESTROY  - post a quit message and return
+//
+//
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+	case WM_COMMAND:
+		{
+			int wmId = LOWORD(wParam);
+			// Parse the menu selections:
+			switch (wmId)
+			{
+			case IDM_ABOUT:
+				DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+				break;
+			case IDM_EXIT:
+				DestroyWindow(hWnd);
+				break;
+			default:
+				return DefWindowProc(hWnd, message, wParam, lParam);
+			}
+		}
+		break;
+	case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+			BeginPaint(hWnd, &ps);
+			// TODO: Add any drawing code here...
+			// Recommendation (commented):
+			// - Keep WM_PAINT focused on painting the current frame into the provided HDC.
+			// - Prefer double-buffering to avoid flicker: create a memory DC and bitmap, draw there,
+			//   then BitBlt to the screen. Put that logic into a Renderer class in a separate file.
+			// - Do not perform heavy game logic in WM_PAINT. Use Update() in your game loop and call
+			//   InvalidateRect(hWnd, NULL, FALSE) when you want WM_PAINT to run for the next frame
+			//   (if relying on the window message system for rendering).
+			// - For continuous rendering, you can call RedrawWindow or use PeekMessage-based loop and
+			//   call your Renderer directly instead of relying on WM_PAINT solely.
+			EndPaint(hWnd, &ps);
+		}
+		break;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	return 0;
+}
+
+// Message handler for about box.
+INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	UNREFERENCED_PARAMETER(lParam);
+	switch (message)
+	{
+	case WM_INITDIALOG:
+		return (INT_PTR)TRUE;
+
+	case WM_COMMAND:
+		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+		{
+			EndDialog(hDlg, LOWORD(wParam));
+			return (INT_PTR)TRUE;
+		}
+		break;
+	}
+	return (INT_PTR)FALSE;
+}
